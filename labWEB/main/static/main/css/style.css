@@ -1,0 +1,56 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.btn-secondary {
+    margin-top: 20px;
+}
+
+.dark-mode {
+    background-color: #333;
+    color: #fff;
+}
+
+.dark-mode .form-group label {
+    color: #fff;
+}
+
+.dark-mode .form-group input[type="text"],
+.dark-mode .form-group input[type="email"],
+.dark-mode .form-group input[type="password"],
+.dark-mode .form-group select {
+    background-color: #555;
+    color: #fff;
+}
+
+.dark-mode .form-check-label {
+    color: #fff;
+}
+
+.dark-mode .btn-primary,
+.dark-mode .btn-secondary {
+    background-color: #555;
+    border-color: #555;
+    color: #fff;
+}
+
+.dark-mode .btn-primary:hover,
+.dark-mode .btn-secondary:hover {
+    background-color: #777;
+    border-color: #777;
+    color: #fff;
+}
+
+body.dark-mode {
+    background-color: #222;
+    color: #fff;
+}

@@ -1,0 +1,34 @@
+<form id="logForm" method="POST" action="php/login.php">
+    {% csrf_token %}
+    <div class="form-group">
+        <label>Логин:</label>
+        {{login_form.login}}
+    </div>
+    <div class="form-group">
+        <label>Пароль:</label>
+        <div class="input-group">
+            {{login_form.password}}
+            <div class="input-group-append">
+            <span class="input-group-text" id="togglePassword1">
+                <i class="fa fa-eye" aria-hidden="true"></i>
+            </span>
+            </div>
+        </div>
+    </div>
+    <span>{{error}}</span>
+    <div class="g-recaptcha" data-sitekey="6LeUYYgpAAAAAHjo3qZ8wEhMcl4YkW-N6lQIvJGX"></div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary" style="Cross-Origin-Resource-Policy: same-site;">Войти</button>
+    </div>
+</form>
+<script crossorigin="anonymous" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function(){
+        $("#togglePassword1").click(function(){
+            const passwordField = $("#loginPassword");
+            const fieldType = passwordField.attr('type');
+            passwordField.attr('type', fieldType === 'password' ? 'text' : 'password');
+        });
+    });
+</script>

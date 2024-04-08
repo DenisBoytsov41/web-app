@@ -1,0 +1,83 @@
+<form id="registrationForm" method="POST" action="{% url 'registration' %}">
+    {% csrf_token %}
+    <span>{{error}}</span>
+    <div class="form-group">
+        <label>Имя:</label>
+        {{registration_form.name}}
+    </div>
+    <div class="form-group">
+        <label>Фамилия:</label>
+        {{registration_form.surname}}
+    </div>
+    <div class="form-group">
+        <label>Email:</label>
+        {{registration_form.email}}
+    </div>
+    <div class="form-group">
+        <label>Логин:</label>
+        {{registration_form.login}}
+    </div>
+    <div class="form-group">
+        <label>Пароль:</label>
+        <div class="input-group">
+            {{registration_form.password}}
+            <div class="input-group-append">
+            <span class="input-group-text" id="togglePassword2">
+                <i class="fa fa-eye" aria-hidden="true"></i>
+            </span>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Подтверждение пароля:</label>
+        <div class="input-group">
+            {{registration_form.confirm_password}}
+            <div class="input-group-append">
+            <span class="input-group-text" id="toggleConfirmPassword2">
+                <i class="fa fa-eye" aria-hidden="true"></i>
+            </span>
+            </div>
+        </div>
+    </div>
+    <div class="form-group form-check">
+        {{registration_form.rules_acceptance}}
+        <label class="form-check-label">Принимаю правила...</label>
+    </div>
+    <div class="form-group">
+        <label>Мне 18 лет:</label>
+        {{registration_form.age_confirmation}}
+    </div>
+   <div class="form-group">
+    <label>Пол:</label><br>
+    {% for gender_choice in registration_form.gender.field.choices %}
+        {% if not forloop.first %}
+            <div class="form-check form-check-inline">
+                <input type="radio" id="{{ gender_choice.0 }}" name="{{ registration_form.gender.html_name }}" value="{{ gender_choice.0 }}" class="form-check-input" {% if gender_choice.0 == registration_form.gender.value %}checked{% endif %}>
+                <label class="form-check-label" for="{{ gender_choice.0 }}">{{ gender_choice.1 }}</label>
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
+
+
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+    </div>
+</form>
+<script crossorigin="anonymous" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function(){
+        $("#togglePassword2").click(function(){
+            const passwordField = $("#password");
+            const fieldType = passwordField.attr('type');
+            passwordField.attr('type', fieldType === 'password' ? 'text' : 'password');
+        });
+
+        $("#toggleConfirmPassword2").click(function(){
+            const confirmPasswordField = $("#confirmPassword");
+            const fieldType = confirmPasswordField.attr('type');
+            confirmPasswordField.attr('type', fieldType === 'password' ? 'text' : 'password');
+        });
+    });
+</script>
+

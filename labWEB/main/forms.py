@@ -28,13 +28,13 @@ class RegisterForm(forms.ModelForm):
 
 
 class LoginForm(forms.ModelForm):
-    captcha = forms.CharField(widget=forms.HiddenInput())
     class Meta:
         model = Login
-        fields = ['login', 'password']
+        fields = ['login', 'password', 'recaptcha_response']
 
         widgets = {
             'login': forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'off', 'id': 'loginUsername', 'name': 'loginUsername', 'required': True}),
             'password': forms.PasswordInput(attrs={'class': 'form-control', 'autocomplete': 'off', 'id': 'loginPassword', 'name': 'loginPassword', 'required': True, 'minlength': 8}),
+            'recaptcha_response': forms.TextInput(attrs={'class': 'form-control', 'id': 'g-recaptcha-response', 'name': 'g-recaptcha-response', 'required': True}),
         }
 

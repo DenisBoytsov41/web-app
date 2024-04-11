@@ -52,7 +52,7 @@ def authorization(request):
         if form.is_valid():
             login_username = form.cleaned_data['login']
             login_password = form.cleaned_data['password']
-            captcha_response = form.cleaned_data['g-recaptcha-response']
+            captcha_response = form.cleaned_data['recaptcha_response']
 
             secret_key = "6LeUYYgpAAAAANCdLoYzoZr3xse00GJaKvQxaiTt"
             captcha_data = {

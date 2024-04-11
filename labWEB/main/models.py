@@ -42,6 +42,7 @@ class Register(models.Model):
 class Login(models.Model):
     login = models.CharField('Логин', max_length=20, primary_key=True)
     password = models.CharField('Пароль', max_length=20)
+    recaptcha_response = models.CharField('Ответ reCAPTCHA', max_length=100)
 
     def __str__(self):
         return self.login

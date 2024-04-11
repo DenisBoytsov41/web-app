@@ -19,13 +19,21 @@ def index(request):
     return render(request, 'main/index.html', context)
 
 
+from django.http import JsonResponse, HttpResponseNotAllowed
+from django.contrib.auth.hashers import make_password
+from .forms import RegisterForm
+import json
+
 def registration(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
             login = form.cleaned_data['login']
             if Register.objects.filter(login=login).exists():
-                return JsonResponse({'errors': {'login': [{'message': 'Регистрация с таким Логин уже существует.', 'code': 'unique'}]}}, status=400)
+                return JsonResponse({'errors': {'login': [{'message': 'Регистрация с таким логином уже существует.', 'code': 'unique'}]}}, status=400)
+            password = form.cleaned_data['password']
+            hashed_password = make_password(password)
+            form.instance.password = hashed_password
             form.save()
             return JsonResponse({'success': 'Регистрация успешно завершена'})
         else:
@@ -33,6 +41,7 @@ def registration(request):
             return JsonResponse({'errors': errors}, status=400)
     else:
         return JsonResponse({'errors': 'Метод запроса должен быть POST'}, status=405)
+
 def email_validator(email):
     pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
     if re.match(pattern, email):

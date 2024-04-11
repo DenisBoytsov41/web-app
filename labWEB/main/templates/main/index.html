@@ -82,26 +82,29 @@
                 },
                 error: function(xhr, status, error) {
                     console.error("Ошибка при обработке запроса:", xhr.responseText);
-                    var errorMessage;
+                    var errorMessage = "Произошла ошибка при обработке запроса";
+
                     try {
                         var errorData = JSON.parse(xhr.responseText);
                         if (errorData.errors) {
                             var errorObject = JSON.parse(errorData.errors);
-                            if (errorObject.login && errorObject.login.length > 0) {
-                                errorMessage = errorObject.login[0].message;
-                            } else {
-                                errorMessage = errorData.detail || 'Произошла ошибка';
+                            errorMessage = "";
+                            // Перебираем все параметры с ошибками
+                            for (var key in errorObject) {
+                                if (errorObject.hasOwnProperty(key)) {
+                                    for (var i = 0; i < errorObject[key].length; i++) {
+                                        errorMessage += errorObject[key][i].message + "<br>";
+                                    }
+                                }
                             }
                         } else {
                             errorMessage = errorData.detail || 'Произошла ошибка';
                         }
                     } catch (e) {
                         console.error("Ошибка при парсинге ответа сервера:", e);
-                        errorMessage = "Произошла ошибка при обработке запроса";
                     }
                     $('#registrationErrors').html('<div class="alert alert-danger">' + errorMessage + '</div>');
                 }
-
             });
         });
     });

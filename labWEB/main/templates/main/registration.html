@@ -1,4 +1,4 @@
-<form id="registrationForm" method="POST" action="{% url 'registration' %}">
+<form id="registrationForm" method="POST" action="">
     {% csrf_token %}
     <span>{{error}}</span>
     <div class="form-group">
@@ -64,7 +64,7 @@
         <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
     </div>
 </form>
-<script crossorigin="anonymous" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function(){
         $("#togglePassword2").click(function(){

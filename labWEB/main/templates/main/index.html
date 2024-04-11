@@ -5,11 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cтраница сайта</title>
-    <link crossorigin="anonymous" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link crossorigin="anonymous" rel="stylesheet" type="text/css" href="{% static 'main/css/mainstyle.css' %}">
-    <link crossorigin="anonymous" rel="stylesheet" type="text/css" href="{% static 'main/css/cockie.css' %}">
-    <script crossorigin="anonymous" src="https://www.google.com/recaptcha/api.js" async defer></script>
-    <script crossorigin="anonymous" src="https://cdn.osano.com/cookieconsent/OsanoCookieConsent.js"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'main/css/mainstyle.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'main/css/cockie.css' %}">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script src="https://cdn.osano.com/cookieconsent/OsanoCookieConsent.js"></script>
 </head>
 <body>
 
@@ -36,13 +36,13 @@
     <button id="acceptCookiesBtn" class="accept-cookies-btn">Принять</button>
 </div>
 
-<script crossorigin="anonymous" src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script crossorigin="anonymous" src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<script crossorigin="anonymous" src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-<script crossorigin="anonymous" src="{% static 'main/js/ThemeType.js' %}"></script>
-<script crossorigin="anonymous" src="{% static 'main/js/login.js' %}"></script>
-<script crossorigin="anonymous" src="{% static 'main/js/register.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="{% static 'main/js/ThemeType.js' %}"></script>
+<script src="{% static 'main/js/login.js' %}"></script>
+<script src="{% static 'main/js/register.js' %}"></script>
 
 <script>
     //localStorage.clear();
@@ -62,7 +62,7 @@
         });
     });
 
-    $(document).ready(function() {
+   $(document).ready(function() {
         $('#registrationForm').submit(function(event) {
             event.preventDefault();
             var formData = $(this).serialize();
@@ -75,22 +75,36 @@
                 headers: {'X-CSRFToken': csrfToken}, // Добавляем CSRF-токен в заголовки запроса
                 success: function(data) {
                     console.log(formData);
+                    console.log(data.errors);
                     console.log(data);
-
-                    var responseData = JSON.parse(data);
-                    console.log(responseData);
-                    console.log(responseData.errors);
-                    if (responseData.errors) {
-                        $('#registrationErrors').html('<div class="alert alert-danger">' + responseData.errors + '</div>');
-                    } else {
-                        $('#registrationErrors').html('<div class="alert alert-success">' + responseData.success + '</div>');
-                        $('#registrationForm').trigger("reset");
+                    $('#registrationErrors').html('<div class="alert alert-success">' + data.success + '</div>');
+                    $('#registrationForm').trigger("reset");
+                },
+                error: function(xhr, status, error) {
+                    console.error("Ошибка при обработке запроса:", xhr.responseText);
+                    var errorMessage;
+                    try {
+                        var errorData = JSON.parse(xhr.responseText);
+                        if (errorData.errors) {
+                            var errorObject = JSON.parse(errorData.errors);
+                            if (errorObject.login && errorObject.login.length > 0) {
+                                errorMessage = errorObject.login[0].message;
+                            } else {
+                                errorMessage = errorData.detail || 'Произошла ошибка';
+                            }
+                        } else {
+                            errorMessage = errorData.detail || 'Произошла ошибка';
+                        }
+                    } catch (e) {
+                        console.error("Ошибка при парсинге ответа сервера:", e);
+                        errorMessage = "Произошла ошибка при обработке запроса";
                     }
+                    $('#registrationErrors').html('<div class="alert alert-danger">' + errorMessage + '</div>');
                 }
+
             });
         });
     });
-
 
     $(document).ready(function() {
         $('#logForm').submit(function(event) {

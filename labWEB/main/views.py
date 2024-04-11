@@ -3,14 +3,15 @@ from .models import Login
 from .forms import LoginForm
 from .forms import RegisterForm
 from django.shortcuts import render
+import re
+from django.contrib.auth.hashers import check_password
+from .models import Register
+import jwt
+import requests
 from django.http import JsonResponse, HttpResponseNotAllowed
 from django.contrib.auth.hashers import make_password
-from .models import Register
+from .forms import RegisterForm
 import json
-import re
-
-
-# Create your views here.
 
 def index(request):
     registration_form = RegisterForm()
@@ -18,11 +19,6 @@ def index(request):
     context = {'login_form': login_form, 'registration_form': registration_form}
     return render(request, 'main/index.html', context)
 
-
-from django.http import JsonResponse, HttpResponseNotAllowed
-from django.contrib.auth.hashers import make_password
-from .forms import RegisterForm
-import json
 
 def registration(request):
     if request.method == 'POST':
@@ -50,19 +46,43 @@ def email_validator(email):
         return False
 
 
-
 def authorization(request):
-    error = ''
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            form.save()
+            login_username = form.cleaned_data['login']
+            login_password = form.cleaned_data['password']
+            captcha_response = form.cleaned_data['g-recaptcha-response']
+
+            secret_key = "6LeUYYgpAAAAANCdLoYzoZr3xse00GJaKvQxaiTt"
+            captcha_data = {
+                'secret': secret_key,
+                'response': captcha_response
+            }
+            captcha_response_data = requests.post('https://www.google.com/recaptcha/api/siteverify', data=captcha_data)
+            captcha_result = captcha_response_data.json()
+
+            if not captcha_result['success']:
+                return JsonResponse({'errors': 'Подтвердите, что вы не робот.'}, status=403)
+
+            # Поиск пользователя по логину
+            users = Register.objects.filter(login=login_username)
+
+            if users.exists():
+                user = users.first()
+                if check_password(login_password, user.password):
+                    jwt_payload = {
+                        'login': user.login,
+                        'email': user.email
+                    }
+                    jwt_secret = "5A8xGvK2TQnS7z"
+                    jwt_token = jwt.encode(jwt_payload, jwt_secret, algorithm='HS256')
+                    return JsonResponse({'success': 'Вы успешно вошли в систему.', 'token': jwt_token})
+                else:
+                    return JsonResponse({'errors': 'Неверный логин или пароль.'}, status=401)
+            else:
+                return JsonResponse({'errors': 'Пользователь с таким логином не существует.'}, status=402)
         else:
-            error = 'Форма была неверной'
+            return JsonResponse({'errors': form.errors}, status=406)
     else:
-        form = LoginForm()
-    data = {
-        'form': form,
-        'error': error
-    }
-    return render(request, 'main/authorization.html', data)
+        return JsonResponse({'errors': 'Метод запроса должен быть POST'}, status=405)

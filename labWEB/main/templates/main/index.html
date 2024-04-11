@@ -113,11 +113,13 @@
         $('#logForm').submit(function(event) {
             event.preventDefault();
             var formData = $(this).serialize();
+            var csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
 
             $.ajax({
                 type: 'POST',
-                url: 'php/login.php',
+                url: '{% url 'authorization' %}',
                 data: formData,
+                headers: {'X-CSRFToken': csrfToken},
                 success: function(data) {
                     console.log(data);
 

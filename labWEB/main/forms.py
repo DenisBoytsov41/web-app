@@ -28,6 +28,7 @@ class RegisterForm(forms.ModelForm):
 
 
 class LoginForm(forms.ModelForm):
+    captcha = forms.CharField(widget=forms.HiddenInput())
     class Meta:
         model = Login
         fields = ['login', 'password']

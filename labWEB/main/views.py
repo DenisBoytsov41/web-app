@@ -1,4 +1,6 @@
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
+
 from .models import Login
 from .forms import LoginForm
 from .forms import RegisterForm
@@ -19,7 +21,7 @@ def index(request):
     context = {'login_form': login_form, 'registration_form': registration_form}
     return render(request, 'main/index.html', context)
 
-
+@csrf_exempt
 def registration(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
@@ -45,14 +47,14 @@ def email_validator(email):
     else:
         return False
 
-
+@csrf_exempt
 def authorization(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
             login_username = form.cleaned_data['login']
             login_password = form.cleaned_data['password']
-            captcha_response = form.cleaned_data['recaptcha_response']
+            captcha_response = request.POST.get('g-recaptcha-response')
 
             secret_key = "6LeUYYgpAAAAANCdLoYzoZr3xse00GJaKvQxaiTt"
             captcha_data = {

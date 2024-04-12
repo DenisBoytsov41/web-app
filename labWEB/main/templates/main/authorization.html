@@ -9,15 +9,15 @@
         <div class="input-group">
             {{login_form.password}}
             <div class="input-group-append">
-            <span class="input-group-text" id="togglePassword1">
-                <i class="fa fa-eye" aria-hidden="true"></i>
-            </span>
+                <span class="input-group-text" id="togglePassword1">
+                    <i class="fa fa-eye" aria-hidden="true"></i>
+                </span>
             </div>
         </div>
     </div>
     <span>{{error}}</span>
-    <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response">
     <div class="g-recaptcha" data-sitekey="6LeUYYgpAAAAAHjo3qZ8wEhMcl4YkW-N6lQIvJGX"></div>
+    <input id="rec-response" name="rec-response" value="">
     <div class="form-group">
         <button type="submit" class="btn btn-primary" style="Cross-Origin-Resource-Policy: same-site;">Войти</button>
     </div>
@@ -31,5 +31,33 @@
             const fieldType = passwordField.attr('type');
             passwordField.attr('type', fieldType === 'password' ? 'text' : 'password');
         });
+
+        // Обработка отправки формы
+        $("#logForm").submit(function(event) {
+            var response = grecaptcha.getResponse();
+            // Присваиваем значение полям ответа на капчу
+            document.getElementById('rec-response').value = response;
+
+            // Если ответ пустой, прерываем отправку формы и выводим сообщение
+            if (response.length == 0) {
+                event.preventDefault();
+                alert("Подтвердите, что вы не робот.");
+            }
+        });
+
+        // Обработка изменения ответа на капчу
+        $(".g-recaptcha").on('change', function() {
+            var response = grecaptcha.getResponse();
+            // Выполняем функцию обновления значения поля с ответом на капчу
+            updateRecaptchaResponse(response);
+        });
+
+        function updateRecaptchaResponse(response) {
+            document.getElementById('rec-response').value = response;
+        }
+
+        window.updateRecaptchaResponse = updateRecaptchaResponse;
     });
+
 </script>
+

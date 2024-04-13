@@ -30,8 +30,11 @@ def registration(request):
             if Register.objects.filter(login=login).exists():
                 return JsonResponse({'errors': {'login': [{'message': 'Регистрация с таким логином уже существует.', 'code': 'unique'}]}}, status=400)
             password = form.cleaned_data['password']
+            confirm_password = form.cleaned_data['confirm_password']
             hashed_password = make_password(password)
+            hashed_confirm_password = make_password(confirm_password)
             form.instance.password = hashed_password
+            form.instance.confirm_password = hashed_confirm_password
             form.save()
             return JsonResponse({'success': 'Регистрация успешно завершена'})
         else:

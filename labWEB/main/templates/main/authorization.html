@@ -17,7 +17,7 @@
     </div>
     <span>{{error}}</span>
     <div class="g-recaptcha" data-sitekey="6LeUYYgpAAAAAHjo3qZ8wEhMcl4YkW-N6lQIvJGX"></div>
-    <input id="rec-response" name="rec-response" value="">
+    <input type = "hidden" id="rec-response" name="rec-response" value="">
     <div class="form-group">
         <button type="submit" class="btn btn-primary" style="Cross-Origin-Resource-Policy: same-site;">Войти</button>
     </div>
@@ -44,6 +44,7 @@
                 alert("Подтвердите, что вы не робот.");
             }
         });
+
 
         // Обработка изменения ответа на капчу
         $(".g-recaptcha").on('change', function() {

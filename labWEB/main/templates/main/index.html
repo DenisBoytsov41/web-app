@@ -122,24 +122,29 @@
                 headers: {'X-CSRFToken': csrfToken},
                 success: function(data) {
                     console.log(data);
+                    $('#loginErrors').html('<div class="alert alert-success">' + data.success + '</div>');
+                    $('#loginErrors').trigger("reset");
+                    grecaptcha.reset();
+                },
+                error: function(xhr, status, error) {
+                    console.error("Ошибка при обработке запроса:", xhr.responseText);
+                    var errorMessage = "Произошла ошибка при обработке запроса";
+                    var errorObject = JSON.parse(xhr.responseText);
+                    console.error(errorObject.errors);
 
-                    if (typeof data === 'string' && data.trim().startsWith('{') && data.trim().endsWith('}')) {
-                        var responseData = JSON.parse(data);
-                        console.log(responseData);
-
-                        if (responseData.errors) {
-                            $('#loginErrors').html('<div class="alert alert-danger">' + responseData.errors + '</div>');
-                        } else if (responseData.success && responseData.token) {
-                            $('#loginErrors').html('<div class="alert alert-success">' + responseData.success + '</div>');
-                            window.location.href = 'php/personal_cabinet.php?token=' + responseData.token;
+                    try {
+                        var errorData = xhr.responseText;
+                        var errorObject = JSON.parse(xhr.responseText);
+                        if (errorObject.errors) {
+                            errorMessage = errorObject.errors;
                         } else {
-
-                            $('#loginErrors').html('<div class="alert alert-danger">Некорректный формат данных</div>');
+                            errorMessage = errorData.detail || 'Произошла ошибка';
                         }
-                    } else {
-
-                        $('#loginErrors').html('<div class="alert alert-danger">' + data + '</div>');
+                    } catch (e) {
+                        console.error("Ошибка при парсинге ответа сервера:", e);
                     }
+                    $('#loginErrors').html('<div class="alert alert-danger">' + errorMessage + '</div>');
+                    grecaptcha.reset();
                 }
             });
         });

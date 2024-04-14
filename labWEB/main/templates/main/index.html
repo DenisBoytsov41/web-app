@@ -125,6 +125,15 @@
                     $('#loginErrors').html('<div class="alert alert-success">' + data.success + '</div>');
                     $('#loginErrors').trigger("reset");
                     grecaptcha.reset();
+
+                    if (data.token) {
+                        var per = data.token;
+                        var url = '/personal_cabinet/?token=' + per; // Добавляем токен в строку запроса
+                        window.location.href = url;
+                    } else {
+                        console.error("Токен не был получен в ответе сервера.");
+                    }
+
                 },
                 error: function(xhr, status, error) {
                     console.error("Ошибка при обработке запроса:", xhr.responseText);

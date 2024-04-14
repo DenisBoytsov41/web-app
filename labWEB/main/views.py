@@ -1,6 +1,5 @@
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-
 from .models import Login
 from .forms import LoginForm
 from .forms import RegisterForm
@@ -10,16 +9,25 @@ from django.contrib.auth.hashers import check_password
 from .models import Register
 import jwt
 import requests
-from django.http import JsonResponse, HttpResponseNotAllowed
 from django.contrib.auth.hashers import make_password
 from .forms import RegisterForm
 import json
+from django.views.generic import DetailView, TemplateView
+from django.contrib.auth import logout
+from django.contrib.auth import authenticate, login
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import UserToken
+import jwt
+from django.conf import settings
+
 
 def index(request):
     registration_form = RegisterForm()
     login_form = LoginForm()
     context = {'login_form': login_form, 'registration_form': registration_form}
     return render(request, 'main/index.html', context)
+
 
 @csrf_exempt
 def registration(request):
@@ -28,7 +36,9 @@ def registration(request):
         if form.is_valid():
             login = form.cleaned_data['login']
             if Register.objects.filter(login=login).exists():
-                return JsonResponse({'errors': {'login': [{'message': 'Регистрация с таким логином уже существует.', 'code': 'unique'}]}}, status=400)
+                return JsonResponse({'errors': {
+                    'login': [{'message': 'Регистрация с таким логином уже существует.', 'code': 'unique'}]}},
+                                    status=400)
             password = form.cleaned_data['password']
             confirm_password = form.cleaned_data['confirm_password']
             hashed_password = make_password(password)
@@ -43,12 +53,38 @@ def registration(request):
     else:
         return JsonResponse({'errors': 'Метод запроса должен быть POST'}, status=405)
 
+
 def email_validator(email):
     pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
     if re.match(pattern, email):
         return True
     else:
         return False
+
+@csrf_exempt
+def user_login(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        user = authenticate(request, email=email, password=password)
+        if user is not None:
+            login(request, user)
+            # Создаем или обновляем токен для пользователя
+            token, created = UserToken.objects.get_or_create(user=user)
+            return JsonResponse({'token': token.token})
+        else:
+            return JsonResponse({'error': 'Invalid credentials'}, status=400)
+
+@csrf_exempt
+def user_logout(request):
+    try:
+        token = request.POST.get('token')
+        user_token = UserToken.objects.get(token=token)
+        user_token.delete()
+        logout(request)
+        return JsonResponse({'message': 'Logged out successfully'})
+    except UserToken.DoesNotExist:
+        return JsonResponse({'error': 'Token not found'}, status=400)
 
 @csrf_exempt
 def authorization(request):
@@ -80,7 +116,7 @@ def authorization(request):
                         'login': user.login,
                         'email': user.email
                     }
-                    jwt_secret = "5A8xGvK2TQnS7z"
+                    jwt_secret = settings.JWT_SECRET_KEY
                     jwt_token = jwt.encode(jwt_payload, jwt_secret, algorithm='HS256')
                     return JsonResponse({'success': 'Вы успешно вошли в систему.', 'token': jwt_token})
                 else:

@@ -1,0 +1,156 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{% static 'cabinet/css/personal_cabinet.css' %}">
+    <title>Личный кабинет</title>
+</head>
+<body class="{{ current_theme }}">
+<div>
+    <h1>Личный кабинет</h1>
+    <p>Добро пожаловать, {{ username if not guest_mode else 'Гость' }}!</p>
+    {% if not guest_mode %}
+        <form method="post">
+            <label>Выберите тему:</label>
+            <button id="theme-switch-btn" type="submit" name="theme" value="{{ 'dark' if current_theme == 'light' else 'light' }}">
+                {{ 'Темная тема' if current_theme == 'light' else 'Светлая тема' }}
+            </button>
+        </form>
+    {% endif %}
+    {% if not guest_mode %}
+        <form method="post" action="/mysqli_fetch_array.php">
+            <button class="btn" type="submit">Вывод данных из базы на страницу</button>
+        </form>
+        <form method="post" action="/total_records.php">
+            <button class="btn" type="submit">Общее количество записей в таблице</button>
+        </form>
+    {% endif %}
+    <form method="post" class="logout-form">
+        <button type="submit" class="logout" name="logout">Выйти</button>
+    </form>
+    <div id="dataContainer">
+        {% if guest_mode %}
+            {% raw '' %}
+        {% endif %}
+    </div>
+</div>
+<script src="/js/theme.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let logoutRequested = false;
+        let pageRefreshed = false;
+        let themeChanged = false; // Флаг для отслеживания смены темы
+
+        // Добавляем обработчик клика по кнопке смены темы
+        document.getElementById('theme-switch-btn').addEventListener('click', function() {
+            themeChanged = true;
+        });
+
+        window.addEventListener('popstate', function(event) {
+            console.log('Нажата кнопка "Назад"');
+            if (!logoutRequested && !pageRefreshed && !themeChanged) {
+                sendLogoutRequestIfNotRequested();
+            }
+        });
+
+        history.pushState(null, null, window.location.href);
+
+        function onPageRefresh() {
+            console.log('Страница обновлена');
+            pageRefreshed = true;
+        }
+
+        function onFocus() {
+            console.log('Окно активировано');
+            if (!logoutRequested && !pageRefreshed && !themeChanged) {
+                sendLogoutRequestIfNotRequested();
+            }
+        }
+
+        function onBlur() {
+            console.log('Окно деактивировано');
+        }
+
+        function sendLogoutRequestIfNotRequested() {
+            if (!logoutRequested && !pageRefreshed && !themeChanged) {
+                sendLogoutRequest();
+            }
+        }
+
+        function sendLogoutRequest() {
+            fetch('/logout', {
+                method: 'POST'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Успешно отправлен запрос на logout');
+                        logoutRequested = true;
+                        history.back();
+                    } else {
+                        console.error('Ошибка при отправке запроса на logout:', response.status);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при отправке запроса на logout:', error);
+                });
+        }
+
+        window.addEventListener('focus', onFocus);
+        window.addEventListener('blur', onBlur);
+        window.addEventListener('beforeunload', onPageRefresh);
+    });
+</script>
+<script>
+    const jwtToken = "{{ jwt_token }}";
+    console.log(jwtToken);
+    if (jwtToken) {
+        fetch('protected_resource.php', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${jwtToken}`
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Ошибка HTTP: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const dataContainer = document.getElementById('dataContainer');
+                console.log(dataContainer);
+                if (dataContainer) {
+                    dataContainer.textContent = JSON.stringify(data);
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+    } else {
+        console.log('Токен отсутствует');
+        const dataContainer = document.getElementById('dataContainer');
+        if (dataContainer) {
+            dataContainer.textContent = 'Доступ запрещен для гостей';
+        }
+    }
+</script>
+<script>
+    const jwtToken2 = "{{ jwt_token2 }}";
+    const guestMode = {{ guest_mode }};
+    let scriptExecuted = sessionStorage.getItem('scriptExecuted');
+    console.log(jwtToken2);
+
+    if (!scriptExecuted && !jwtToken2 && guestMode && window.location.pathname.includes('/personal_cabinet')) {
+        window.location.href = '/personal_cabinet';
+        sessionStorage.setItem('scriptExecuted', true);
+        console.log('fsf');
+    }
+
+    window.addEventListener('beforeunload', function() {
+        sessionStorage.removeItem('scriptExecuted');
+    });
+</script>
+</body>
+</html>

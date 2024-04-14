@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MinLengthValidator, MaxLengthValidator, EmailValidator, RegexValidator
-
+from django.contrib.auth import get_user_model
 
 class Register(models.Model):
     GENDER_CHOICES = [
@@ -49,3 +49,12 @@ class Login(models.Model):
     class Meta:
         verbose_name = 'Вход в систему'
         verbose_name_plural = 'Входы в систему'
+
+User = get_user_model()
+
+class UserToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    token = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.token

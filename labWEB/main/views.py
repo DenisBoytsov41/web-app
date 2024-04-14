@@ -17,7 +17,6 @@ from django.contrib.auth import logout
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import UserToken
 import jwt
 from django.conf import settings
 
@@ -61,30 +60,6 @@ def email_validator(email):
     else:
         return False
 
-@csrf_exempt
-def user_login(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        user = authenticate(request, email=email, password=password)
-        if user is not None:
-            login(request, user)
-            # Создаем или обновляем токен для пользователя
-            token, created = UserToken.objects.get_or_create(user=user)
-            return JsonResponse({'token': token.token})
-        else:
-            return JsonResponse({'error': 'Invalid credentials'}, status=400)
-
-@csrf_exempt
-def user_logout(request):
-    try:
-        token = request.POST.get('token')
-        user_token = UserToken.objects.get(token=token)
-        user_token.delete()
-        logout(request)
-        return JsonResponse({'message': 'Logged out successfully'})
-    except UserToken.DoesNotExist:
-        return JsonResponse({'error': 'Token not found'}, status=400)
 
 @csrf_exempt
 def authorization(request):

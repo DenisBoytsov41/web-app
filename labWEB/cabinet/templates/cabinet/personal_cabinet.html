@@ -9,34 +9,67 @@
 </head>
 <body class="{{ current_theme }}">
 <div>
+    <link rel="stylesheet" type="text/css" href="{% static 'cabinet/css/secondstyle.css' %}">
     <h1>Личный кабинет</h1>
-    <p>Добро пожаловать, {{ username if not guest_mode else 'Гость' }}!</p>
+    <p>Добро пожаловать, {{ username|default_if_none:"Гость" }}!</p>
     {% if not guest_mode %}
         <form method="post">
+            {% csrf_token %}
             <label>Выберите тему:</label>
-            <button id="theme-switch-btn" type="submit" name="theme" value="{{ 'dark' if current_theme == 'light' else 'light' }}">
-                {{ 'Темная тема' if current_theme == 'light' else 'Светлая тема' }}
+            <button id="theme-switch-btn" type="submit" name="theme" value="{% if current_theme == 'light' %}dark{% else %}light{% endif %}">
+                {% if current_theme == 'light' %}
+                    Темная тема
+                {% else %}
+                    Светлая тема
+                {% endif %}
             </button>
         </form>
     {% endif %}
-    {% if not guest_mode %}
-        <form method="post" action="/mysqli_fetch_array.php">
+    {% if username != null and jwt_token != null %}
+        <form method="post" action="mysqli_fetch_array.php">
+            {% csrf_token %}
             <button class="btn" type="submit">Вывод данных из базы на страницу</button>
         </form>
-        <form method="post" action="/total_records.php">
+        <form method="post" action="total_records.php">
+            {% csrf_token %}
             <button class="btn" type="submit">Общее количество записей в таблице</button>
+        </form>
+        <form method="post" action="count_records_last_month.php">
+            {% csrf_token %}
+            <button class="btn" type="submit">Подсчет количества записей за последний месяц</button>
+        </form>
+        <form method="post" action="last_added_record.php">
+            {% csrf_token %}
+            <button class="btn" type="submit">Какая запись была сделана последней</button>
+        </form>
+        <form method="post" action="display_results.php">
+            {% csrf_token %}
+            <button class="btn" type="submit">Размещение данных на странице</button>
+        </form>
+        <form method="get" action="search_results.php">
+            {% csrf_token %}
+            <label for="usersearch1">Поиск по ключевому слову:</label>
+            <input type="text" id="usersearch1" name="usersearch" placeholder="Введите ключевое слово">
+            <button class="btn" type="submit">Искать</button>
+        </form>
+        <form method="get" action="search_results_2.php">
+            {% csrf_token %}
+            <label for="usersearch2">Реализация поиска по фразе:</label>
+            <input type="text" id="usersearch2" name="usersearch" placeholder="Введите фразу поиска">
+            <button class="btn" type="submit">Искать</button>
         </form>
     {% endif %}
     <form method="post" class="logout-form">
-        <button type="submit" class="logout" name="logout">Выйти</button>
+        {% csrf_token %}
+        <button type="submit" class="btn" name="logout">Выйти</button>
     </form>
     <div id="dataContainer">
         {% if guest_mode %}
-            {% raw '' %}
+            <!-- Тут может быть какой-то код, если нужно -->
         {% endif %}
     </div>
 </div>
-<script src="/js/theme.js"></script>
+<script src="{% static 'cabinet/js/theme.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         let logoutRequested = false;
@@ -75,7 +108,7 @@
 
         function sendLogoutRequestIfNotRequested() {
             if (!logoutRequested && !pageRefreshed && !themeChanged) {
-                sendLogoutRequest();
+                //sendLogoutRequest();
             }
         }
 
@@ -151,6 +184,10 @@
     window.addEventListener('beforeunload', function() {
         sessionStorage.removeItem('scriptExecuted');
     });
+</script>
+<script>
+    console.log('Логин:', '{{ context }}');
+    console.log('Токен:', '{{ jwt_token }}');
 </script>
 </body>
 </html>

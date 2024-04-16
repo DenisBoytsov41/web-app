@@ -13,10 +13,10 @@
     <h1>Личный кабинет</h1>
     <p>Добро пожаловать, {{ username|default_if_none:"Гость" }}!</p>
     {% if not guest_mode %}
-        <form method="post">
+        <form id="theme-form">
             {% csrf_token %}
             <label>Выберите тему:</label>
-            <button id="theme-switch-btn" type="submit" name="theme" value="{% if current_theme == 'light' %}dark{% else %}light{% endif %}">
+            <button id="theme-switch-btn" type="button" value="{% if current_theme == 'light' %}dark{% else %}light{% endif %}">
                 {% if current_theme == 'light' %}
                     Темная тема
                 {% else %}
@@ -59,13 +59,13 @@
             <button class="btn" type="submit">Искать</button>
         </form>
     {% endif %}
-    <form method="post" class="logout-form">
+    <form method="post" id="logout-form">
         {% csrf_token %}
-        <button type="submit" class="btn" name="logout">Выйти</button>
+        <button type="submit" class="btn" id="logout-btn">Выйти</button>
     </form>
+    <div id="message-container"></div>
     <div id="dataContainer">
         {% if guest_mode %}
-            <!-- Тут может быть какой-то код, если нужно -->
         {% endif %}
     </div>
 </div>
@@ -74,120 +74,81 @@
     document.addEventListener('DOMContentLoaded', function() {
         let logoutRequested = false;
         let pageRefreshed = false;
-        let themeChanged = false; // Флаг для отслеживания смены темы
+        let themeChanged = false;
 
-        // Добавляем обработчик клика по кнопке смены темы
         document.getElementById('theme-switch-btn').addEventListener('click', function() {
             themeChanged = true;
+            const currentTheme = document.body.classList.contains('light') ? 'light' : 'dark';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.body.classList.remove(currentTheme);
+            document.body.classList.add(newTheme);
+            saveThemeToDatabase(newTheme);
         });
 
-        window.addEventListener('popstate', function(event) {
-            console.log('Нажата кнопка "Назад"');
-            if (!logoutRequested && !pageRefreshed && !themeChanged) {
-                sendLogoutRequestIfNotRequested();
-            }
+        document.getElementById('logout-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Предотвращаем отправку формы по умолчанию
+            sendLogoutRequest('{{ jwt_token }}');
         });
 
-        history.pushState(null, null, window.location.href);
-
-        function onPageRefresh() {
-            console.log('Страница обновлена');
-            pageRefreshed = true;
-        }
-
-        function onFocus() {
-            console.log('Окно активировано');
-            if (!logoutRequested && !pageRefreshed && !themeChanged) {
-                sendLogoutRequestIfNotRequested();
-            }
-        }
-
-        function onBlur() {
-            console.log('Окно деактивировано');
-        }
-
-        function sendLogoutRequestIfNotRequested() {
-            if (!logoutRequested && !pageRefreshed && !themeChanged) {
-                //sendLogoutRequest();
-            }
-        }
-
-        function sendLogoutRequest() {
-            fetch('/logout', {
-                method: 'POST'
+        function saveThemeToDatabase(theme) {
+            fetch('{% url 'save_theme' %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    username: '{{ username }}',
+                    theme: theme
+                 })
             })
-                .then(response => {
-                    if (response.ok) {
-                        console.log('Успешно отправлен запрос на logout');
-                        logoutRequested = true;
-                        history.back();
-                    } else {
-                        console.error('Ошибка при отправке запроса на logout:', response.status);
-                    }
-                })
-                .catch(error => {
-                    console.error('Ошибка при отправке запроса на logout:', error);
-                });
-        }
-
-        window.addEventListener('focus', onFocus);
-        window.addEventListener('blur', onBlur);
-        window.addEventListener('beforeunload', onPageRefresh);
-    });
-</script>
-<script>
-    const jwtToken = "{{ jwt_token }}";
-    console.log(jwtToken);
-    if (jwtToken) {
-        fetch('protected_resource.php', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${jwtToken}`
-            }
-        })
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Ошибка HTTP: ' + response.status);
                 }
-                return response.json();
-            })
-            .then(data => {
-                const dataContainer = document.getElementById('dataContainer');
-                console.log(dataContainer);
-                if (dataContainer) {
-                    dataContainer.textContent = JSON.stringify(data);
+                console.log('Тема успешно сохранена в базе данных');
+                const themeSwitchBtn = document.getElementById('theme-switch-btn');
+                if (theme === 'dark') {
+                    themeSwitchBtn.textContent = 'Светлая тема';
+                } else {
+                    themeSwitchBtn.textContent = 'Темная тема';
                 }
             })
             .catch(error => {
-                console.error('Ошибка:', error);
+                console.error('Ошибка при сохранении темы в базе данных:', error);
             });
-    } else {
-        console.log('Токен отсутствует');
-        const dataContainer = document.getElementById('dataContainer');
-        if (dataContainer) {
-            dataContainer.textContent = 'Доступ запрещен для гостей';
         }
-    }
-</script>
-<script>
-    const jwtToken2 = "{{ jwt_token2 }}";
-    const guestMode = {{ guest_mode }};
-    let scriptExecuted = sessionStorage.getItem('scriptExecuted');
-    console.log(jwtToken2);
 
-    if (!scriptExecuted && !jwtToken2 && guestMode && window.location.pathname.includes('/personal_cabinet')) {
-        window.location.href = '/personal_cabinet';
-        sessionStorage.setItem('scriptExecuted', true);
-        console.log('fsf');
-    }
-
-    window.addEventListener('beforeunload', function() {
-        sessionStorage.removeItem('scriptExecuted');
+        function sendLogoutRequest(token) {
+            fetch('{% url 'logout' %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    username: '{{ username }}',
+                    token: token
+                 })
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Успешно отправлен запрос на logout');
+                    logoutRequested = true;
+                    window.location.href = '/'; // Перенаправляем пользователя на главную страницу
+                } else {
+                    console.error('Ошибка при отправке запроса на logout:', response.status);
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при отправке запроса на logout:', error);
+            });
+        }
     });
+
 </script>
 <script>
-    console.log('Логин:', '{{ context }}');
-    console.log('Токен:', '{{ jwt_token }}');
+    console.log('{{ jwt_token }}')
 </script>
 </body>
 </html>

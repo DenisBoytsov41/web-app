@@ -1,12 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.contrib.auth.models import User
+from main.models import Register
 
 class UserTheme(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(Register, on_delete=models.CASCADE,primary_key=True)
     theme = models.CharField(max_length=10, choices=[('light', 'Светлая'), ('dark', 'Темная')], default='light')
     def __str__(self):
-        return self.user
+        return str(self.user)
 
     class Meta:
         verbose_name = 'Тема'
@@ -15,11 +16,11 @@ class UserTheme(models.Model):
 
 User = get_user_model()
 class UserToken(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    token = models.CharField(max_length=255)
+    user = models.OneToOneField(Register, on_delete=models.CASCADE,primary_key=True)
+    token = models.CharField(max_length=255, null=True)
 
     def __str__(self):
-        return self.token
+        return str(self.user)
 
     class Meta:
         verbose_name = 'Токен'

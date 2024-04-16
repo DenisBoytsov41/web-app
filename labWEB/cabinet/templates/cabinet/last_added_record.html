@@ -1,0 +1,14 @@
+{% if last_record %}
+    <p>Последняя добавленная запись:</p>
+    <p>ID: {{ last_record.id }}</p>
+    <p>Имя: {{ last_record.name }}</p>
+    <p>Дата создания: {{ last_record.created }}</p>
+{% else %}
+    <p>{{ error_message }}</p>
+{% endif %}
+
+<script>
+    setTimeout(function() {
+        window.history.back();
+    }, 3000);
+</script>

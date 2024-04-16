@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты</title>
+</head>
+<body>
+    <h2>Результаты</h2>
+    <p>Сделано записей: {{ total_records }}</p>
+    <p>За последний месяц создано записей: {{ records_last_month }}</p>
+    <p>Моя последняя запись: <a href="#">{{ last_record.name }}</a></p>
+</body>
+</html>
+
+<script>
+    setTimeout(function() {
+        window.history.back();
+    }, 3000);
+</script>

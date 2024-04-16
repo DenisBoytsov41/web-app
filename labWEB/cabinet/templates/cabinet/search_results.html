@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты поиска</title>
+</head>
+<body>
+<h2>Результаты поиска</h2>
+<p>Результаты по запросу "{{ user_search }}":</p>
+{% if search_results %}
+    <ul>
+        {% for result in search_results %}
+            <li>{{ result.name }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>{{ error_message }}</p>
+{% endif %}
+</body>
+</html>
+<script>
+    setTimeout(function() {
+        window.history.back();
+    }, 3000);
+</script>

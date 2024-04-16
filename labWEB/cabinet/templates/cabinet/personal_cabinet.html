@@ -45,21 +45,21 @@
             {% csrf_token %}
             <button class="btn" type="submit">Подсчет количества записей за последний месяц</button>
         </form>
-        <form method="post" action="last_added_record.php">
+        <form method="post" action="{% url 'last_added_record' %}">
             {% csrf_token %}
             <button class="btn" type="submit">Какая запись была сделана последней</button>
         </form>
-        <form method="post" action="display_results.php">
+        <form method="post" action="{% url 'display_results' %}">
             {% csrf_token %}
             <button class="btn" type="submit">Размещение данных на странице</button>
         </form>
-        <form method="get" action="search_results.php">
+        <form method="get" action="{% url 'search_results' %}">
             {% csrf_token %}
             <label for="usersearch1">Поиск по ключевому слову:</label>
             <input type="text" id="usersearch1" name="usersearch" placeholder="Введите ключевое слово">
             <button class="btn" type="submit">Искать</button>
         </form>
-        <form method="get" action="search_results_2.php">
+        <form method="get" action="{% url 'search_results_2' %}">
             {% csrf_token %}
             <label for="usersearch2">Реализация поиска по фразе:</label>
             <input type="text" id="usersearch2" name="usersearch" placeholder="Введите фразу поиска">
@@ -92,6 +92,8 @@
                 document.body.classList.remove(currentTheme);
                 document.body.classList.add(newTheme);
                 saveThemeToDatabase(newTheme);
+                document.cookie = `theme=${newTheme}; expires=Thu, 01 Jan 2026 00:00:00 UTC; path=/`;
+                localStorage.setItem('theme', newTheme);
             });
         }
 

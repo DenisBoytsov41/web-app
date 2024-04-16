@@ -1,4 +1,5 @@
 from audioop import reverse
+from datetime import datetime, timedelta
 
 import jwt
 from django.contrib.auth.decorators import login_required
@@ -203,3 +204,54 @@ def count_records_last_month(request):
 
     record_count = Users.objects.filter(created__range=(begin_date, end_date)).count()
     return render(request, 'cabinet/count_records_last_month.html', {'record_count': record_count})
+
+def last_added_record(request):
+    try:
+        # Получаем последнюю добавленную запись
+        last_record = Users.objects.latest('created')
+        context = {
+            'last_record': last_record
+        }
+        return render(request, 'cabinet/last_added_record.html', context)
+    except Users.DoesNotExist:
+        return render(request, 'cabinet/last_added_record.html', {'error_message': 'Записей не найдено'})
+
+def display_results(request):
+    try:
+        total_records = Users.objects.count()
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=30)
+        records_last_month = Users.objects.filter(created__range=[start_date, end_date]).count()
+        last_record = Users.objects.latest('created')
+        context = {
+            'total_records': total_records,
+            'records_last_month': records_last_month,
+            'last_record': last_record
+        }
+
+        return render(request, 'cabinet/display_results.html', context)
+    except Users.DoesNotExist:
+        return render(request, 'cabinet/display_results.html', {'error_message': 'Записей не найдено'})
+
+def search_results(request):
+    if 'usersearch' in request.GET:
+        user_search = request.GET['usersearch']
+        if user_search:
+            search_results = Users.objects.filter(name__icontains=user_search)
+            return render(request, 'cabinet/search_results.html', {'search_results': search_results, 'user_search': user_search})
+    return render(request, 'cabinet/search_results.html', {'error_message': 'Пожалуйста, введите ключевое слово для поиска.'})
+
+
+def search_results_2(request):
+    if 'usersearch' in request.GET:
+        user_search = request.GET['usersearch']
+        search_words = user_search.split()
+        print(search_words)
+        results = []
+        for word in search_words:
+            results += Users.objects.filter(name__icontains=word)
+
+        print(results)
+        return render(request, 'cabinet/search_results_2.html', {'results': results})
+
+    return render(request, 'cabinet/search_results_2.html', {'error_message': 'Введите запрос в поле поиска.'})

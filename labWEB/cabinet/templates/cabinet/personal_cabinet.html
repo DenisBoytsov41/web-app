@@ -11,7 +11,14 @@
 <div>
     <link rel="stylesheet" type="text/css" href="{% static 'cabinet/css/secondstyle.css' %}">
     <h1>Личный кабинет</h1>
-    <p>Добро пожаловать, {{ username|default_if_none:"Гость" }}!</p>
+    <p id="cookie-content"></p>
+    {% if guest_mode %}
+        <p>Добро пожаловать, {{ username }}, в гостевой режим!</p>
+    {% elif username %}
+        <p>Добро пожаловать, {{ username }}!</p>
+    {% else %}
+        <p>Добро пожаловать, Гость!</p>
+    {% endif %}
     {% if not guest_mode %}
         <form id="theme-form">
             {% csrf_token %}
@@ -25,7 +32,7 @@
             </button>
         </form>
     {% endif %}
-    {% if username != null and jwt_token != null %}
+    {% if username != null and jwt_token != null and not guest_mode%}
         <form method="post" action="mysqli_fetch_array.php">
             {% csrf_token %}
             <button class="btn" type="submit">Вывод данных из базы на страницу</button>
@@ -76,21 +83,29 @@
         let pageRefreshed = false;
         let themeChanged = false;
 
-        document.getElementById('theme-switch-btn').addEventListener('click', function() {
-            themeChanged = true;
-            const currentTheme = document.body.classList.contains('light') ? 'light' : 'dark';
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            document.body.classList.remove(currentTheme);
-            document.body.classList.add(newTheme);
-            saveThemeToDatabase(newTheme);
-        });
+        const themeSwitchBtn = document.getElementById('theme-switch-btn');
+        if (themeSwitchBtn) {
+            themeSwitchBtn.addEventListener('click', function() {
+                themeChanged = true;
+                const currentTheme = document.body.classList.contains('light') ? 'light' : 'dark';
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                document.body.classList.remove(currentTheme);
+                document.body.classList.add(newTheme);
+                saveThemeToDatabase(newTheme);
+            });
+        }
 
         document.getElementById('logout-form').addEventListener('submit', function(event) {
-            event.preventDefault(); // Предотвращаем отправку формы по умолчанию
+            event.preventDefault();
+            logoutRequested = true;
             sendLogoutRequest('{{ jwt_token }}');
         });
 
         function saveThemeToDatabase(theme) {
+            // Сохраняем тему в куки
+            document.cookie = `theme=${theme}; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/`;
+            const cookieContentElement = document.getElementById('cookie-content');
+            cookieContentElement.textContent = `Содержимое куки "theme": ${getCookie('theme')}`;
             fetch('{% url 'save_theme' %}', {
                 method: 'POST',
                 headers: {
@@ -120,6 +135,11 @@
         }
 
         function sendLogoutRequest(token) {
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+
             fetch('{% url 'logout' %}', {
                 method: 'POST',
                 headers: {
@@ -128,14 +148,15 @@
                 },
                 body: JSON.stringify({
                     username: '{{ username }}',
-                    token: token
+                    token: token,
+                    error: '{{ error }}'
                  })
             })
             .then(response => {
                 if (response.ok) {
                     console.log('Успешно отправлен запрос на logout');
                     logoutRequested = true;
-                    window.location.href = '/'; // Перенаправляем пользователя на главную страницу
+                    window.location.href = '/';
                 } else {
                     console.error('Ошибка при отправке запроса на logout:', response.status);
                 }
@@ -144,11 +165,65 @@
                 console.error('Ошибка при отправке запроса на logout:', error);
             });
         }
+
+        const themeStorage = localStorage.getItem('theme');
+        const cookieContentElement = document.getElementById('cookie-content');
+        if (themeStorage) {
+            cookieContentElement.textContent = `Содержимое куки "theme": ${themeStorage}`;
+        } else {
+            cookieContentElement.textContent = 'Куки не найдены или не установлены';
+        }
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        // Получаем содержимое куки и отображаем на странице
+        const themeCookie = getCookie('theme');
     });
 
 </script>
 <script>
-    console.log('{{ jwt_token }}')
+    let isButtonClicked = false;
+
+    history.pushState({page: 'personal_cabinet'}, "Personal Cabinet", "");
+
+    console.log("Не нажал");
+
+    document.addEventListener('click', function(event) {
+        isButtonClicked = true;
+    });
+
+    window.addEventListener('beforeunload', function(event) {
+        if (!isButtonClicked) {
+            console.log("Нажал");
+            console.log('Кнопка назад была нажата');
+
+            fetch('{% url 'delete_token' %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    username: '{{ username }}'
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Токен успешно удален');
+                } else {
+                    console.error('Ошибка при удалении токена:', response.status);
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при удалении токена:', error);
+            });
+        }
+    });
+
 </script>
+
 </body>
 </html>

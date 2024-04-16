@@ -93,7 +93,7 @@ def authorization(request):
                     }
                     jwt_secret = settings.JWT_SECRET_KEY
                     jwt_token = jwt.encode(jwt_payload, jwt_secret, algorithm='HS256')
-                    return JsonResponse({'success': 'Вы успешно вошли в систему.', 'token': jwt_token})
+                    return JsonResponse({'success': 'Вы успешно вошли в систему.', 'token': jwt_token,'login':user.login})
                 else:
                     return JsonResponse({'errors': 'Неверный логин или пароль.'}, status=401)
             else:

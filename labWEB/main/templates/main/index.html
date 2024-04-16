@@ -126,12 +126,13 @@
                     $('#loginErrors').trigger("reset");
                     grecaptcha.reset();
 
-                    if (data.token) {
-                        var per = data.token;
-                        var url = '/personal_cabinet/?token=' + per; // Добавляем токен в строку запроса
+                    if (data.token && data.login) {
+                        var token = data.token;
+                        var login = data.login;
+                        var url = '/personal_cabinet/?token=' + token + '&login=' + login;
                         window.location.href = url;
                     } else {
-                        console.error("Токен не был получен в ответе сервера.");
+                        console.error("Токен или логин не были получены в ответе сервера.");
                     }
 
                 },

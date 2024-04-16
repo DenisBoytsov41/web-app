@@ -6,11 +6,12 @@ from django.http import JsonResponse
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.shortcuts import render, redirect
-from .models import UserTheme,UserToken
+from .models import UserTheme, UserToken,Users
 from main.models import Register
 from django.http import JsonResponse
 from .models import UserTheme
 import json
+from django.utils import timezone
 
 class PersonalCabinetView(TemplateView):
     template_name = 'cabinet/personal_cabinet.html'
@@ -186,3 +187,19 @@ def protected_resource(request):
 
 def index(request):
     return render(request, 'cabinet/personal_cabinet.html')
+
+def retrieve_data(request):
+    registers = Register.objects.all()
+    return render(request, 'cabinet/retrieve_data.html', {'registers': registers})
+
+def total_records(request):
+    total_users = Register.objects.count()
+    return render(request, 'cabinet/total_records.html', {'total_users': total_users})
+
+def count_records_last_month(request):
+    today = timezone.now()
+    begin_date = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    end_date = begin_date.replace(month=begin_date.month + 1) - timezone.timedelta(days=1)
+
+    record_count = Users.objects.filter(created__range=(begin_date, end_date)).count()
+    return render(request, 'cabinet/count_records_last_month.html', {'record_count': record_count})

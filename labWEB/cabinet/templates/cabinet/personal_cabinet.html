@@ -33,15 +33,15 @@
         </form>
     {% endif %}
     {% if username != null and jwt_token != null and not guest_mode%}
-        <form method="post" action="mysqli_fetch_array.php">
+        <form method="post" action="{% url 'retrieve_data' %}">
             {% csrf_token %}
             <button class="btn" type="submit">Вывод данных из базы на страницу</button>
         </form>
-        <form method="post" action="total_records.php">
+        <form method="post" action="{% url 'total_records' %}">
             {% csrf_token %}
             <button class="btn" type="submit">Общее количество записей в таблице</button>
         </form>
-        <form method="post" action="count_records_last_month.php">
+        <form method="post" action="{% url 'count_records_last_month' %}">
             {% csrf_token %}
             <button class="btn" type="submit">Подсчет количества записей за последний месяц</button>
         </form>

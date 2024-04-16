@@ -25,3 +25,16 @@ class UserToken(models.Model):
     class Meta:
         verbose_name = 'Токен'
         verbose_name_plural = 'Токены'
+
+class Users(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    id = models.AutoField(primary_key=True)
+    created = models.DateTimeField()
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'

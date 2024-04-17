@@ -49,3 +49,17 @@ class Login(models.Model):
     class Meta:
         verbose_name = 'Вход в систему'
         verbose_name_plural = 'Входы в систему'
+
+
+class UserProfile(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    def __str__(self):
+        return self.name
+
+class UserRecord(models.Model):
+    profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.profile
